@@ -17,6 +17,7 @@ from bot.services.ai_service import ai_service
 @pytest.fixture(autouse=True, scope="session")
 def setup_test_environment():
     test_db = "data/test_everest.db"
+    db.sqlite_path = test_db
     if os.path.exists(test_db):
         try:
             os.remove(test_db)
@@ -28,6 +29,7 @@ def setup_test_environment():
             os.remove(test_db)
         except Exception:
             pass
+
 
 @pytest.mark.asyncio
 async def test_database_init():
@@ -120,6 +122,24 @@ async def test_test_management_and_grading():
     assert result["total_questions"] == 5
     assert result["percentage"] == 60.0
     assert result["score"] == 6
+
+    # Verify compact answer key parsing without count
+    compact = test_service.parse_answer_key("1a2b3d")
+    assert compact == {1: "A", 2: "B", 3: "D"}
+    assert len(compact) == 3
+
+    # Verify Leaderboard & Standings
+    leaderboard = await test_service.get_test_leaderboard(test["id"])
+    assert len(leaderboard) == 1
+    assert leaderboard[0]["score"] == 6
+
+    formatted = test_service.format_leaderboard(test, leaderboard)
+    assert "🥇" in formatted
+    assert "Bobur Aliyev" in formatted
+
+    # Verify close_test
+    closed = await test_service.close_test(test["id"], 111222)
+    assert closed is True
 
     # Verify Excel report generation
     excel_bytes = await test_service.generate_excel_report(test["id"])

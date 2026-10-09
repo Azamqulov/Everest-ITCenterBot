@@ -21,7 +21,8 @@ logger = logging.getLogger(__name__)
 router = Router()
 
 @router.message(F.text.in_(["📚 Kurslar", "📚 Курсы"]))
-async def handle_courses_menu(message: Message, _: Any):
+async def handle_courses_menu(message: Message, state: FSMContext, _: Any):
+    await state.clear()
     categories = await course_service.get_categories()
     if not categories:
         await message.answer("Hozircha kurslar mavjud emas.")
@@ -31,6 +32,7 @@ async def handle_courses_menu(message: Message, _: Any):
         _("courses_title"),
         reply_markup=get_courses_categories_keyboard(categories)
     )
+
 
 @router.callback_query(F.data == "courses:all_cats")
 async def handle_all_categories(callback: CallbackQuery, _: Any):
@@ -201,7 +203,9 @@ async def handle_enroll_decision(callback: CallbackQuery, state: FSMContext, bot
     if decision == "cancel":
         await state.clear()
         await callback.message.edit_text("Ariza bekor qilindi.")
+        await callback.message.answer("Asosiy menyu:", reply_markup=get_main_menu_keyboard(_))
         return
+
 
     data = await state.get_data()
     course_id = data["course_id"]

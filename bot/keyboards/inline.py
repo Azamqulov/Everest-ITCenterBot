@@ -56,13 +56,42 @@ def get_tests_menu_keyboard(_: Callable[[str], str]) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
+                InlineKeyboardButton(text="➕ Yangi test yaratish", callback_data="test:create"),
                 InlineKeyboardButton(text=_("btn_enter_test_code"), callback_data="test:enter_code")
             ],
             [
+                InlineKeyboardButton(text="📁 Mening testlarim", callback_data="test:my_created"),
                 InlineKeyboardButton(text=_("btn_my_test_results"), callback_data="test:my_results")
             ]
         ]
     )
+
+def get_my_created_tests_keyboard(tests: List[Dict[str, Any]]) -> InlineKeyboardMarkup:
+    rows = []
+    for t in tests:
+        status_icon = "🟢" if t.get("status") == "published" else "🔴"
+        attempts_cnt = t.get("attempts_count", 0)
+        btn_text = f"{status_icon} {t['title']} ({t['code']}) — {attempts_cnt} kishi"
+        rows.append([InlineKeyboardButton(text=btn_text, callback_data=f"test_creator_view:{t['id']}")])
+    rows.append([InlineKeyboardButton(text="➕ Yangi test yaratish", callback_data="test:create")])
+    rows.append([InlineKeyboardButton(text="⬅️ Test menyusi", callback_data="test:menu_back")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+def get_test_creator_keyboard(test_id: int, is_closed: bool = False) -> InlineKeyboardMarkup:
+    rows = [
+        [
+            InlineKeyboardButton(text="📊 Natijalar (Reyting)", callback_data=f"test_results:{test_id}"),
+            InlineKeyboardButton(text="📥 Excel hisobot", callback_data=f"test_excel:{test_id}")
+        ]
+    ]
+    if not is_closed:
+        rows.append([
+            InlineKeyboardButton(text="🏁 Testni yakunlash / yopish", callback_data=f"test_close:{test_id}")
+        ])
+    rows.append([
+        InlineKeyboardButton(text="⬅️ Mening testlarim", callback_data="test:my_created")
+    ])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
 
 def get_test_start_keyboard(_: Callable[[str], str], test_id: int) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(

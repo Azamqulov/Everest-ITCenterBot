@@ -1,5 +1,6 @@
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
+from aiogram.fsm.context import FSMContext
 from typing import Any
 
 from bot.services.db import db
@@ -10,7 +11,9 @@ from bot.config import settings
 router = Router()
 
 @router.message(F.text.in_(["👥 Referal", "👥 Реферал"]))
-async def handle_referral_menu(message: Message, _: Any):
+async def handle_referral_menu(message: Message, state: FSMContext, _: Any):
+    await state.clear()
+
     user_id = message.from_user.id
     user = await db.fetch_one("SELECT referral_code FROM users WHERE telegram_id = ?", (user_id,))
     if not user:

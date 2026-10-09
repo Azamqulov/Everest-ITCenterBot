@@ -18,17 +18,25 @@ class TestService:
         return f"EV-{num}"
 
     @staticmethod
-    def parse_answer_key(text: str, question_count: int) -> Dict[int, str]:
+    def parse_answer_key(text: str, question_count: Optional[int] = None) -> Dict[int, str]:
         """
-        Parses text like '1a 2c 3b 4d' or '1A2B3C' into {1: 'A', 2: 'C', 3: 'B', ...}.
+        Parses text like '1a 2c 3b 4d', '1a2b3d', '1A2B3C' or 'abcd' into {1: 'A', 2: 'C', ...}.
         """
         import re
+        text = text.strip()
         matches = re.findall(r"(\d+)\s*[:.-]?\s*([a-eA-E])", text)
         result = {}
-        for q_str, ans in matches:
-            q_num = int(q_str)
-            if 1 <= q_num <= question_count:
-                result[q_num] = ans.upper()
+        if matches:
+            for q_str, ans in matches:
+                q_num = int(q_str)
+                if question_count is None or (1 <= q_num <= question_count):
+                    result[q_num] = ans.upper()
+        else:
+            letters = re.findall(r"[a-eA-E]", text)
+            if letters:
+                for idx, ans in enumerate(letters, start=1):
+                    if question_count is None or idx <= question_count:
+                        result[idx] = ans.upper()
         return result
 
     @staticmethod
@@ -273,4 +281,68 @@ class TestService:
         buffer.seek(0)
         return buffer.getvalue()
 
+    @staticmethod
+    async def get_test_leaderboard(test_id: int) -> List[Dict[str, Any]]:
+        """Fetch all completed test attempts ordered by score, percentage, finished_at."""
+        return await db.fetch_all("""
+            SELECT ta.*, u.full_name, u.phone, u.username
+            FROM test_attempts ta
+            JOIN users u ON u.telegram_id = ta.user_id
+            WHERE ta.test_id = ? AND ta.status = 'completed'
+            ORDER BY ta.score DESC, ta.percentage DESC, ta.finished_at ASC
+        """, (test_id,))
+
+    @staticmethod
+    async def get_my_created_tests(user_id: int) -> List[Dict[str, Any]]:
+        """Fetch all tests created by user with attempt counts."""
+        return await db.fetch_all("""
+            SELECT t.*, 
+                   COUNT(ta.id) as attempts_count,
+                   AVG(ta.percentage) as avg_score
+            FROM tests t
+            LEFT JOIN test_attempts ta ON ta.test_id = t.id AND ta.status = 'completed'
+            WHERE t.teacher_id = ?
+            GROUP BY t.id
+            ORDER BY t.created_at DESC
+            LIMIT 20
+        """, (user_id,))
+
+    @staticmethod
+    async def close_test(test_id: int, user_id: int) -> bool:
+        """Close/finish test so no more participants can take it."""
+        test = await db.fetch_one("SELECT * FROM tests WHERE id = ?", (test_id,))
+        if not test or test["teacher_id"] != user_id:
+            return False
+        await db.execute("UPDATE tests SET status = 'closed' WHERE id = ?", (test_id,))
+        return True
+
+    @staticmethod
+    def format_leaderboard(test: Dict[str, Any], attempts: List[Dict[str, Any]]) -> str:
+        """Format a human-readable leaderboard ranking text."""
+        if not attempts:
+            return (
+                f"📋 <b>\"{test['title']}\" ({test['code']})</b>\n\n"
+                f"Hozircha hech kim ushbu testni topshirmagan.\n"
+                f"Ushbu kodni do'stlaringizga ulashing: <code>{test['code']}</code>"
+            )
+
+        medals = ["🥇", "🥈", "🥉"]
+        lines = [
+            f"📊 <b>\"{test['title']}\" ({test['code']}) natijalari:</b>",
+            f"👥 Jami qatnashganlar: <b>{len(attempts)} nafar</b>",
+            f"❓ Savollar soni: <b>{test['question_count']} ta</b>\n"
+        ]
+
+        for idx, att in enumerate(attempts, 1):
+            badge = medals[idx - 1] if idx <= 3 else f"{idx}."
+            name = att.get("full_name") or "Ishtirokchi"
+            correct = att.get("correct_count", 0)
+            total = att.get("total_questions", 0)
+            pct = att.get("percentage", 0.0)
+            pts = att.get("score", 0)
+            lines.append(f"{badge} <b>{name}</b> — {correct}/{total} ({pct}%) — <b>+{pts} ball</b>")
+
+        return "\n".join(lines)
+
 test_service = TestService()
+

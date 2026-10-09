@@ -1,5 +1,6 @@
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
+from aiogram.fsm.context import FSMContext
 from typing import Any
 
 from bot.services.db import db
@@ -9,7 +10,9 @@ from bot.keyboards.inline import get_contest_keyboard
 router = Router()
 
 @router.message(F.text.in_(["🎁 Konkurs", "🎁 Конкурс"]))
-async def handle_contest_menu(message: Message, _: Any):
+async def handle_contest_menu(message: Message, state: FSMContext, _: Any):
+    await state.clear()
+
     user_id = message.from_user.id
     contest = await db.fetch_one("SELECT * FROM contests WHERE status = 'active' ORDER BY id DESC LIMIT 1")
 

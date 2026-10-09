@@ -23,7 +23,11 @@ class ErrorHandlerMiddleware(BaseMiddleware):
             err_msg = _("error_occurred") if _ else "⚠️ Kutilmagan xatolik yuz berdi. Iltimos, birozdan so'ng qayta urinib ko'ring."
 
             try:
-                if isinstance(event, Message):
+                if hasattr(event, "message") and event.message:
+                    await event.message.answer(err_msg)
+                elif hasattr(event, "callback_query") and event.callback_query:
+                    await event.callback_query.answer(err_msg, show_alert=True)
+                elif isinstance(event, Message):
                     await event.answer(err_msg)
                 elif isinstance(event, CallbackQuery):
                     await event.answer(err_msg, show_alert=True)
@@ -31,3 +35,4 @@ class ErrorHandlerMiddleware(BaseMiddleware):
                 logger.error(f"Failed to send error notification to user: {notify_err}")
 
             return None
+

@@ -6,7 +6,7 @@
 ## 🎯 Overall Objective & Current Phase
 - **Loyiha:** Everest IT Center ko'p funksiyali Telegram boti (Referal & Konkurs tizimi, Test platformasi, Kurslar katalogi va yozilish, AI post generator).
 - **Hozirgi Bosqich:** Phase 1 (MVP To'liq Implementatsiya va Sinovdan O'tdi)
-- **Status:** Development tugallandi va testlardan muvaffaqiyatli o'tdi (9/9 passed). Bot ishga tushirishga va Telegram tokeni bilan ulashga tayyor.
+- **Status:** 🟢 Live & Active (Bot Telegramda `@Everest_ITCenterbot` orqali ishga tushirildi va xabarlarni qabul qilmoqda).
 
 ## 🧠 Architecture Decision Log (ADR)
 - **Stack:** Python 3.12+ (aiogram 3.31.0), PostgreSQL / Supabase, Redis / MemoryStorage (FSM), APScheduler, Claude 3.5 Sonnet / Gemini 1.5 Pro (Fallback), openpyxl (Excel tahlil va eksport), pytest.
@@ -33,14 +33,19 @@
 - [x] [Faza 4] AI Kanal Post Generator (`ai_service` Claude + Gemini fallback, inson tasdig'i).
 - [x] [Faza 5 & Admin] Admin boshqaruv paneli (Statistika, broadcast, ball audit logi).
 - [x] Unit va integratsiya testlar (9/9 passed).
+- [x] [UX & Feature Upgrade] Universal Bekor qilish va FSM qotib qolish xatosi bartaraf etildi.
+- [x] [Test Upgrade] Umumiy barcha foydalanuvchilar uchun test yaratish (avtomatik kod, `1a2b3d...` javoblar kiritish), matnli javob yuborish, ishtirokchilar ballari va reyting o'rinlarini test yaratuvchisiga yuborish, testni yopish va Excel hisobot.
 
 ## ✅ Completed Checklist (History)
 - [x] 2026-10-05: Loyiha `GOLDEN RULES.md` yaratildi, texnik topshiriq talablari va bosqichlar tasdiqlandi.
 - [x] 2026-10-05: Barcha modullar (Faza 0 - 5) to'liq dasturlandi va testlardan o'tkazildi.
+- [x] 2026-10-09: Universal Bekor qilish mexanizmi, umumiy userlar test yaratishi va real-time reyting bildirishnomalari ishlab chiqildi va sinovdan o'tkazildi.
 
 ## 📋 Roadmap & Upcoming Tasks (Backlog)
 - [ ] Foydalanuvchi tomonidan haqiqiy Telegram Bot Token kiritilishi va serverga deploy qilish.
 - [ ] Mini App (TMA) va onlayn to'lov (Payme/Click) integratsiyasi (kelgusidagi 2-bosqich).
 
 ## 🐛 Known Bugs & UX Defects (Issue Tracker)
+- [x] [HAL QILINDI] Bekor qilish bosilganda bot qotib qolishi muammosi (FSM state tiqilishi va universal handler yo'qligi) to'liq tuzatildi.
 - [Barcha sinovlar muvaffaqiyatli yakunlandi, kritik xatolar mavjud emas]
+

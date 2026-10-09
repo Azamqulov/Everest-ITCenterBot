@@ -10,6 +10,12 @@ class StudentTestStates(StatesGroup):
     entering_code = State()
     taking_test = State()
 
+class UserTestCreationStates(StatesGroup):
+    waiting_title = State()
+    waiting_answers = State()
+    waiting_file = State()
+    waiting_time_limit = State()
+
 class TeacherTestStates(StatesGroup):
     waiting_title = State()
     waiting_subject = State()

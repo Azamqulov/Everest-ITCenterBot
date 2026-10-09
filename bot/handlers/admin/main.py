@@ -1,6 +1,7 @@
 import logging
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
+from aiogram.fsm.context import FSMContext
 from typing import Any
 
 from bot.services.db import db
@@ -11,7 +12,9 @@ logger = logging.getLogger(__name__)
 router = Router()
 
 @router.message(F.text.in_(["🛠 Admin panel", "🛠 Панель админа"]))
-async def handle_admin_panel(message: Message, user_role: str, _: Any):
+async def handle_admin_panel(message: Message, state: FSMContext, user_role: str, _: Any):
+    await state.clear()
+
     if not RoleFilter.is_admin(user_role, message.from_user.id):
         await message.answer(_("access_denied"))
         return

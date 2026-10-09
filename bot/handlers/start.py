@@ -1,7 +1,8 @@
 import logging
+from typing import Any, Callable
 from aiogram import Router, F, Bot
 from aiogram.types import Message, CallbackQuery, ChatMemberOwner, ChatMemberAdministrator, ChatMemberMember
-from aiogram.filters import CommandStart, CommandObject
+from aiogram.filters import CommandStart, CommandObject, Command
 from aiogram.fsm.context import FSMContext
 
 from bot.services.db import db
@@ -30,6 +31,21 @@ async def check_channel_subscription(bot: Bot, user_id: int) -> bool:
             # If bot is not in channel or error, allow through or handle gracefully
             continue
     return True
+
+CANCEL_TEXTS = {
+    "❌ bekor qilish", "❌ отмена", "bekor qilish", "отмена",
+    "⬅️ orqaga", "orqaga", "назад", "⬅️ назад",
+    "/cancel", "cancel"
+}
+
+@router.message(Command("cancel"))
+@router.message(F.text.func(lambda t: bool(t and t.strip().lower() in CANCEL_TEXTS)))
+async def handle_universal_cancel(message: Message, state: FSMContext, _: Any, user_role: str = "user"):
+    await state.clear()
+    await message.answer(
+        "❌ Amal bekor qilindi.",
+        reply_markup=get_main_menu_keyboard(_, role=user_role)
+    )
 
 @router.message(CommandStart())
 async def handle_start(message: Message, command: CommandObject, state: FSMContext, _: Any, lang: str):
@@ -210,16 +226,20 @@ async def handle_phone_contact(message: Message, state: FSMContext, bot: Bot, _:
 
 # Static navigation handlers
 @router.message(F.text.in_(["ℹ️ Markaz haqida", "ℹ️ О центре"]))
-async def handle_about(message: Message, _: Any):
+async def handle_about(message: Message, state: FSMContext, _: Any):
+    await state.clear()
     await message.answer(_("about_title"), parse_mode="HTML")
 
 @router.message(F.text.in_(["💬 Aloqa", "💬 Контакты"]))
-async def handle_contact(message: Message, _: Any):
+async def handle_contact(message: Message, state: FSMContext, _: Any):
+    await state.clear()
     await message.answer(_("contact_title"), parse_mode="HTML")
 
 @router.message(F.text.in_(["🌐 Til / Язык"]))
-async def handle_change_language(message: Message, _: Any):
+async def handle_change_language(message: Message, state: FSMContext, _: Any):
+    await state.clear()
     await message.answer(
         "Iltimos, tilni tanlang / Пожалуйста, выберите язык:",
         reply_markup=get_language_keyboard()
     )
+

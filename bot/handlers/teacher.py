@@ -21,10 +21,12 @@ logger = logging.getLogger(__name__)
 router = Router()
 
 @router.message(F.text.in_(["🧑‍🏫 Teacher panel", "🧑‍🏫 Панель учителя"]))
-async def handle_teacher_panel(message: Message, user_role: str, _: Any):
+async def handle_teacher_panel(message: Message, state: FSMContext, user_role: str, _: Any):
+    await state.clear()
     if not RoleFilter.is_teacher(user_role, message.from_user.id):
         await message.answer(_("access_denied"))
         return
+
 
     await message.answer(
         "🧑‍🏫 <b>Everest IT Center — O'qituvchi boshqaruv paneli</b>\n\nQuyidagi amallardan birini tanlang:",
